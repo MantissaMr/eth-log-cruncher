@@ -9,9 +9,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use chrono::{DateTime, Datelike, Local, NaiveDateTime};
 use std::collections::HashMap;
+use serde::{Serialize};
 
 //DATA STRUCTURES 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 struct LogEntry {
     level: String,
     timestamp: DateTime<Local>,
@@ -97,11 +98,11 @@ fn main() {
 
 // WORKFLOW LOGIC
 fn run(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Processing log file at path: {}", args.log_file_path);
-
-    // Validation processes 
+    eprintln!("Processing log file at path: {}", args.log_file_path);
+ 
     let path = Path::new(&args.log_file_path);
-
+    
+    // Validation processes
     if !path.exists() {
         return Err(format!("Error: File not found at path '{}'", args.log_file_path).into());
     }
@@ -112,11 +113,11 @@ fn run(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
 
         // Determine the year to use for log entries
     let year = args.year.unwrap_or_else(|| Local::now().year());
-    println!("Using year: {}", year);
+    eprintln!("Using year: {}", year);
 
     // File reading and processing
     let file = File::open(path)?;
-    println!("Successfully opened the log file!");
+    eprintln!("Successfully opened the log file!");
 
     let reader = io::BufReader::new(file);
     
@@ -129,12 +130,12 @@ fn run(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(log_entry) = parse_line(&line, year){
             valid_line_count += 1;
 
-            if valid_line_count <= 10 {
-                println!("{:#?}", log_entry);
-            }
+            let json_string = serde_json::to_string(&log_entry)?;
+            println!("{}", json_string); 
+
         }
     }
-    println!("Successful! Total valid log entries: {}", valid_line_count); 
+    eprintln!("Successful! Total valid log entries: {}", valid_line_count); 
 
     Ok(())
 }
