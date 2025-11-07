@@ -10,6 +10,7 @@ use regex::Regex;
 use chrono::{DateTime, Datelike, Local, NaiveDateTime};
 use std::collections::HashMap;
 use serde::{Serialize};
+use indicatif::{ProgressBar, ProgressStyle};
 
 //DATA STRUCTURES 
 #[derive(Debug, Serialize)]
@@ -98,7 +99,7 @@ fn main() {
 
 // WORKFLOW LOGIC
 fn run(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
-    eprintln!("Processing log file at path: {}", args.log_file_path);
+    // eprintln!("Processing log file at path: {}", args.log_file_path);
  
     let path = Path::new(&args.log_file_path);
     
@@ -115,16 +116,24 @@ fn run(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
     let year = args.year.unwrap_or_else(|| Local::now().year());
     eprintln!("Using year: {}", year);
 
-    // File reading and processing
-    let file = File::open(path)?;
-    eprintln!("Successfully opened the log file!");
+   //  eprint!("Pre-scanning file to count lines...");
+    let total_lines = io::BufReader::new(File::open(path)?).lines().count();
 
+        // progress bar setup
+    let pb = ProgressBar::new(total_lines as u64);
+    pb.set_style(ProgressStyle:: default_bar()
+        .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({percent}%) - {msg}")?
+        .progress_chars("#>-"));
+    pb.set_message("Scanning log file...");
+    
+        // Open the file for reading
+    let file = File::open(path)?;
     let reader = io::BufReader::new(file);
     
     let mut valid_line_count = 0;
 
     // Main processing loop
-    for line_result in reader.lines() {
+    for line_result in pb.wrap_iter(reader.lines()) {
         let line = line_result?;
 
         if let Some(log_entry) = parse_line(&line, year){
@@ -135,7 +144,15 @@ fn run(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
 
         }
     }
-    eprintln!("Successful! Total valid log entries: {}", valid_line_count); 
+
+    pb.finish_with_message("Scan complete!");
+    // Summary output
+    eprint!("\n");
+    eprintln!("Run Summary");
+    eprintln!("---------------------");
+    eprintln!("Total Lines Processed: {}", total_lines);
+    eprintln!("Valid Log Entries Found: {}", valid_line_count);
+    eprintln!("---------------------");
 
     Ok(())
 }
