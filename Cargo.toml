@@ -1,5 +1,5 @@
 [package]
-name = "eth-log-cruncher"
+name = "geth-log-cruncher"
 version = "0.1.0"
 edition = "2024"
 
