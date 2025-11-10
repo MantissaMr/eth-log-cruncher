@@ -2,6 +2,9 @@
 name = "geth-log-cruncher"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "A fast, simple CLI tool for parsing Ethereum Geth logs into JSONL."
+repository = "https://github.com/MantissaMr/geth-log-cruncher"
 
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
