@@ -40,7 +40,7 @@ Write parsed output to a file, then count INFO logs:
 
 ```bash
 geth-log-cruncher /var/log/geth.log > /tmp/geth.jsonl
-jq '.level' /tmp/geth.jsonl | grep -c '"DEBUG"'
+jq '.level' /tmp/geth.jsonl | grep -c '"INFO"'
 ```
 
 ## Output format
